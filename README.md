@@ -1,18 +1,16 @@
-# **ODOO HACKATHON - PHASE 1**
-
-### **SELECTED PS: PS2**
+# **StackIt – Minimalist Q\&A Forum**
 
 ---
 
-## 🔍 Problem Statement: **PS2 – StackIt**
+## Overview
 
-### **Overview**
-
-**StackIt** is a **minimalist Q\&A forum platform** focused on enhancing **collaborative learning** and **structured knowledge sharing** within a community. Designed for **simplicity and clarity**, it streamlines the process of asking and answering questions in a distraction-free environment.
+**StackIt** is a web-based platform focused on enhancing **collaborative learning** and **structured knowledge sharing** within a community. Designed for **simplicity and clarity**, it streamlines the process of asking and answering questions in a distraction-free environment.
 
 ---
 
-## 👥 **User Roles & Permissions**
+## Features
+
+### **User Roles & Permissions**
 
 | Role      | Permissions                                    |
 | --------- | ---------------------------------------------- |
@@ -22,52 +20,78 @@
 
 ---
 
-## 💡 **Core Features**
-
-### 1. **Ask a Question**
+### **Ask a Question**
 
 * Title: Short, descriptive input field
-* Description: Written using a **rich text editor**
+* Description: Rich text editor for detailed explanation
 * Tags: Multiple tag selection (e.g., `React`, `JWT`)
 
-### 2. **Rich Text Editor Capabilities**
+---
 
-* Basic formatting: **Bold**, *Italic*, ~~Strikethrough~~
+### **Rich Text Editor Capabilities**
+
+* Formatting: **Bold**, *Italic*, ~~Strikethrough~~
 * Lists: Numbered & Bulleted
 * Extras: Emojis, Hyperlinks, Image uploads
 * Text alignment: Left, Center, Right
 
-### 3. **Answer Questions**
+---
 
-* Post formatted answers via the same rich text editor
-* Answering is restricted to **logged-in users**
+### **Answer Questions**
 
-### 4. **Voting & Answer Acceptance**
-
-* Upvote or downvote answers
-* Original poster can **mark an answer as accepted**
-
-### 5. **Tagging System**
-
-* All questions must include relevant **topic tags**
-
-### 6. **Notification System**
-
-* 🔔 Notification icon in navigation bar
-* Users are notified when:
-
-  * Their question receives an answer
-  * Their answer receives a comment
-  * They are mentioned via `@username`
-* Dropdown displays recent unread notifications
+* Post formatted answers using the same editor
+* Answering restricted to **logged-in users**
 
 ---
 
-## 🚀 Goals
+### **Voting & Answer Acceptance**
 
-To build an intuitive and engaging knowledge-sharing platform that empowers users to learn from each other through structured Q\&A discussions, all while maintaining minimal design overhead.
+* Upvote/downvote answers
+* Original poster can **mark an answer as accepted**
 
-## MAIL IDs:-
+---
 
-- Team Leader:- acharyadevesh1105@gmail.com (unstop registered one:- unofficialme4068@yahoo.com)
+### **Tagging System**
 
+* Questions require relevant **topic tags**
+* Supports tag-based filtering and search
+
+---
+
+### **Notification System**
+
+* 🔔 Notification icon in the navigation bar
+* Users notified when:
+
+  * Their question receives an answer
+  * Their answer gets a comment
+  * They are mentioned (`@username`)
+* Dropdown displays unread notifications
+
+---
+
+## Goals
+
+To build an intuitive and engaging knowledge-sharing platform that empowers users to learn from one another through structured Q\&A discussions, all while maintaining a minimalist interface.
+
+---
+
+## Team
+
+**Team Name:** Binary Beasts
+
+* Member 1: Devesh Acharya
+* Member 2: Menil Dhameliya
+* Member 3: Priyank Shah
+* Member 4: Rayan Jain
+
+---
+
+## Contact
+
+**Team Leader Email:**
+
+* [acharyadevesh1105@gmail.com](mailto:acharyadevesh1105@gmail.com)
+ </br> **Unstop Registered ID:**
+* [unofficialme4068@yahoo.com](mailto:unofficialme4068@yahoo.com)
+---
