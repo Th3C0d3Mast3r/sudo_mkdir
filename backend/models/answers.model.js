@@ -1,21 +1,22 @@
-import mongoose, { mongo } from "mongoose";
+import mongoose from "mongoose";
 
 const AnsSchema = mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
-    require: true,
+    ref: "User",
+    required: true,
   },
-  Photo: {
+  photo: {
     type: String,
   },
   question: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Questions",
-    require: true,
+    required: true,
   },
   answer: {
-    type: Blob,
-    require: true,
+    type: String,
+    required: true,
   },
   upvotes: {
     type: Number,
@@ -27,7 +28,6 @@ const AnsSchema = mongoose.Schema({
   },
   createdAt: {
     type: Date,
-    require: true,
     default: Date.now,
   },
 });
