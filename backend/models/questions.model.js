@@ -4,19 +4,26 @@ const questionSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
+    required: true,
   },
-  Title: {
+  title: {
     type: String,
     require: true,
   },
   description: {
-    type: Blob,
+    type: String,
     require: true,
   },
-  Photo: {
+  tags: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Tags",
+    },
+  ],
+  photo: {
     type: String,
   },
-  NumberOfAnswer: {
+  numberOfAnswer: {
     type: Number,
     default: 0,
   },
@@ -30,11 +37,10 @@ const questionSchema = new mongoose.Schema({
   },
   createdAt: {
     type: Date,
-    require: true,
     default: Date.now,
   },
   correctAnsId: {
-    type: mongoose.Schema.ObjectId.Types,
+    type: mongoose.Schema.Types.ObjectId,
     ref: "Answers",
   },
 });

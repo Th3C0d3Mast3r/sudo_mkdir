@@ -1,14 +1,13 @@
 import mongoose from "mongoose";
 
-const tagsSchema= new mongoose.model({
-    name:
-    {
-        type:String,
-        require: true,
-        unique: true
-    }
-})
+const tagsSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+});
 
-const Tags=new mongoose.model("Tags", tagsSchema);
+const Tags = mongoose.model("Tags", tagsSchema);
 
 export default Tags;
