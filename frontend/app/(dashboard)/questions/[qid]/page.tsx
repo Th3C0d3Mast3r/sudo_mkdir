@@ -7,7 +7,7 @@ import { Suspense } from "react";
 export default async function AnswerPage({
   params,
 }: {
-  params: { qid: string };
+  params: Promise<{ qid: string }>;
 }) {
   const qid = (await params).qid;
   try {
