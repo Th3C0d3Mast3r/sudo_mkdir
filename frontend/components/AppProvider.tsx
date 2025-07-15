@@ -10,19 +10,18 @@ function ClerkSync() {
   const { isSignedIn } = useUser();
   const { getToken } = useAuth();
 
+  const clerksync = async () => {
+    const token = await getToken();
+    if (token) {
+      await axios.get(`${BACKEND_URL}/clerk-sync`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+    }
+  };
+
   useEffect(() => {
     if (isSignedIn) {
-      getToken().then((token) => {
-        if (token) {
-          axios.post(
-            `${BACKEND_URL}/clerk-sync`,
-            {},
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
-          );
-        }
-      });
+      clerksync();
     }
   }, [isSignedIn, getToken]);
   return null;

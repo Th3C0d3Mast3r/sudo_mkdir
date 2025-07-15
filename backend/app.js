@@ -478,7 +478,7 @@ app.post("/vote/ans/:aid", auth, async (req, res) => {
   }
 });
 
-app.post("/clerk-sync", auth, async (req, res) => {
+app.get("/clerk-sync", auth, async (req, res) => {
   try {
     const { userId } = getAuth(req);
     const clerkUser = await clerkClient.users.getUser(userId);
