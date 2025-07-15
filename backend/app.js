@@ -10,8 +10,7 @@ import Notification from "./models/notification.model.js";
 import cors from "cors";
 import { v2 as cloudinary } from "cloudinary";
 import multer from "multer";
-import fs from "fs";
-import { clerkClient, getAuth } from "@clerk/express";
+import { clerkClient, clerkMiddleware, getAuth } from "@clerk/express";
 
 dotenv.config();
 
@@ -31,6 +30,11 @@ connectDB();
 
 app.use(express.json());
 app.use(cors());
+app.use((req, res, next) => {
+  console.log("Incoming request:", req.method, req.path);
+  next();
+});
+app.use(clerkMiddleware());
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -104,6 +108,10 @@ app.post("/upload", upload.single("photo"), async (req, res) => {
     console.error("Upload error:", err);
     res.status(500).json({ message: "Upload failed", error: err.message });
   }
+});
+
+app.get("/", (req, res) => {
+  res.send("Hello World!");
 });
 
 app.get("/me", auth, async (req, res) => {
@@ -478,8 +486,16 @@ app.post("/vote/ans/:aid", auth, async (req, res) => {
   }
 });
 
+const utils = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+const generateRandomString = (length) => {
+  let result = "";
+  for (let i = length; i > 0; --i)
+    result += utils[Math.floor(Math.random() * utils.length)];
+  return result;
+};
 app.get("/clerk-sync", auth, async (req, res) => {
   try {
+    console.log("hello");
     const { userId } = getAuth(req);
     const clerkUser = await clerkClient.users.getUser(userId);
     const { emailAddresses, fullName, imageUrl } = clerkUser;
@@ -488,7 +504,8 @@ app.get("/clerk-sync", auth, async (req, res) => {
     let user = await User.findOne({ email });
     if (!user) {
       user = new User({
-        username: fullName.split(" ").join("").toLowerCase(),
+        username:
+          fullName.split(" ").join("").toLowerCase() + generateRandomString(5),
         email,
         photo: imageUrl,
         password: "", // Not needed for Clerk users
@@ -496,7 +513,10 @@ app.get("/clerk-sync", auth, async (req, res) => {
       await user.save();
     } else {
       user.photo = imageUrl;
-      user.username = fullName.split(" ").join("").toLowerCase();
+      user.username =
+        fullName.split(" ").join("").toLowerCase() +
+        "-" +
+        generateRandomString(5);
       await user.save();
     }
     res.status(200).json({ message: "User synced", user });

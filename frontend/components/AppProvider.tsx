@@ -11,17 +11,25 @@ function ClerkSync() {
   const { getToken } = useAuth();
 
   const clerksync = async () => {
-    const token = await getToken();
-    if (token) {
-      await axios.get(`${BACKEND_URL}/clerk-sync`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+    try {
+      const token = await getToken();
+      if (token) {
+        await axios.get(`${BACKEND_URL}:3001/clerk-sync`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+      }
+    } catch (err) {
+      console.error("Clerk sync failed:", err);
     }
   };
 
   useEffect(() => {
     if (isSignedIn) {
-      clerksync();
+      clerksync().then(() => {
+        console.log("hiiiii");
+      });
     }
   }, [isSignedIn, getToken]);
   return null;
