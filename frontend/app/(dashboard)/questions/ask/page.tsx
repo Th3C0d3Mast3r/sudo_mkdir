@@ -25,6 +25,7 @@ import { SignedIn, SignedOut, useAuth } from "@clerk/nextjs";
 import Link from "next/link";
 import axios from "axios";
 import { toast } from "sonner";
+import { BACKEND_URL } from "@/config";
 
 const askQuestionSchema = z.object({
   title: z.string().min(1),
@@ -61,7 +62,7 @@ export default function AskPage() {
       let photoUrl = "";
       if (values.photo) {
         formData.append("photo", values.photo);
-        const res = await axios.post("http://localhost:3001/upload", formData, {
+        const res = await axios.post(`${BACKEND_URL}/upload`, formData, {
           headers: {
             "Content-Type": "multipart/form-data",
           },
@@ -70,7 +71,7 @@ export default function AskPage() {
       }
       const token = await getToken();
       const ress = await axios.post(
-        "http://localhost:3001/question",
+        `${BACKEND_URL}/question`,
         {
           title: values.title,
           description: values.description,

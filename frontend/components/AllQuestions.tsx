@@ -2,11 +2,12 @@ import axios from "axios";
 import { Question } from "./QuestionCard";
 import { CircleQuestionMarkIcon } from "lucide-react";
 import Qpage from "./Qpage";
+import { BACKEND_URL } from "@/config";
 
 const AllQuestions = async () => {
   //await waitfFor(5000);
   try {
-    const res = await axios.get("http://localhost:3001/questions");
+    const res = await axios.get(`${BACKEND_URL}/questions`);
     const questions: Question[] = res.data.questions;
     if (questions.length === 0) {
       return (

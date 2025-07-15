@@ -32,6 +32,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "./ui/pagination";
+import { BACKEND_URL } from "@/config";
 
 interface Answer {
   _id: string;
@@ -81,14 +82,14 @@ export default function Answers({
     if (values.photo) {
       const formData = new FormData();
       formData.append("photo", values.photo);
-      const res = await axios.post("http://localhost:3001/upload", formData, {
+      const res = await axios.post(`${BACKEND_URL}/upload`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       photoUrl = res.data.url;
     }
     const token = await getToken();
     const ans = await axios.post(
-      `http://localhost:3001/answer/${qid}`,
+      `${BACKEND_URL}/answer/${qid}`,
       {
         answer: values.description,
         photo: photoUrl,
@@ -269,7 +270,7 @@ const AnswerCard = ({ answer }: { answer: Answer }) => {
                 try {
                   const token = await getToken();
                   const uv = await axios.post(
-                    `http://localhost:3001/vote/ans/${answern._id}`,
+                    `${BACKEND_URL}/vote/ans/${answern._id}`,
                     {
                       vote: "upvote",
                     },
@@ -298,7 +299,7 @@ const AnswerCard = ({ answer }: { answer: Answer }) => {
                 try {
                   const token = await getToken();
                   const dv = await axios.post(
-                    `http://localhost:3001/vote/ans/${answern._id}`,
+                    `${BACKEND_URL}/vote/ans/${answern._id}`,
                     {
                       vote: "downvote",
                     },

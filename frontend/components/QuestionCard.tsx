@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import axios from "axios";
 import { useState } from "react";
 import { useAuth } from "@clerk/nextjs";
+import { BACKEND_URL } from "@/config";
 
 export interface Question {
   _id: string;
@@ -124,7 +125,7 @@ export default function QuestionCard({ question }: { question: Question }) {
                     try {
                       const token = await getToken();
                       const uv = await axios.post(
-                        `http://localhost:3001/vote/ques/${questionn._id}`,
+                        `${BACKEND_URL}/vote/ques/${questionn._id}`,
                         {
                           vote: "upvote",
                         },
@@ -153,7 +154,7 @@ export default function QuestionCard({ question }: { question: Question }) {
                     const token = await getToken();
                     try {
                       const dv = await axios.post(
-                        `http://localhost:3001/vote/ques/${questionn._id}`,
+                        `${BACKEND_URL}/vote/ques/${questionn._id}`,
                         {
                           vote: "downvote",
                         },

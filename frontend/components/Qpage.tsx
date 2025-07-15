@@ -23,6 +23,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { BACKEND_URL } from "@/config";
 
 // Debounce hook
 function useDebounce<T>(value: T, delay: number): T {
@@ -46,7 +47,7 @@ export default function Qpage({ questions }: { questions: Question[] }) {
   const debouncedSearch = useDebounce(searchQuery, 400);
 
   const getSearchResults = async (query: string) => {
-    const res = await axios.get(`http://localhost:3001/questions/${query}`);
+    const res = await axios.get(`${BACKEND_URL}/questions/${query}`);
     const questions: Question[] = res.data.questions ?? [];
     return questions;
   };
@@ -54,7 +55,7 @@ export default function Qpage({ questions }: { questions: Question[] }) {
   const fetchQuestions = async (page: number) => {
     setLoading(true);
     const res = await axios.get(
-      `http://localhost:3001/questions?page=${page}&limit=${limit}`
+      `${BACKEND_URL}/questions?page=${page}&limit=${limit}`
     );
     setFilteredQuestions(res.data.questions);
     setTotalPages(Math.max(1, Math.ceil((res.data.total || 0) / limit)));

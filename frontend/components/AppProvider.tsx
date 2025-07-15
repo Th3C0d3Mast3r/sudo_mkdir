@@ -4,6 +4,7 @@ import { ClerkProvider, useUser, useAuth } from "@clerk/nextjs";
 import { ThemeProvider } from "next-themes";
 import { useEffect } from "react";
 import axios from "axios";
+import { BACKEND_URL } from "@/config";
 
 function ClerkSync() {
   const { isSignedIn } = useUser();
@@ -14,7 +15,7 @@ function ClerkSync() {
       getToken().then((token) => {
         if (token) {
           axios.post(
-            "http://localhost:3001/clerk-sync",
+            `${BACKEND_URL}/clerk-sync`,
             {},
             {
               headers: { Authorization: `Bearer ${token}` },

@@ -1,5 +1,6 @@
 import Answers from "@/components/Answers";
 import QuestionCard from "@/components/QuestionCard";
+import { BACKEND_URL } from "@/config";
 import axios from "axios";
 import { Suspense } from "react";
 
@@ -10,7 +11,7 @@ export default async function AnswerPage({
 }) {
   const qid = (await params).qid;
   try {
-    const res = await axios.get(`http://localhost:3001/answers/${qid}`);
+    const res = await axios.get(`${BACKEND_URL}/answers/${qid}`);
 
     return (
       <div>
