@@ -513,10 +513,6 @@ app.get("/clerk-sync", auth, async (req, res) => {
       await user.save();
     } else {
       user.photo = imageUrl;
-      user.username =
-        fullName.split(" ").join("").toLowerCase() +
-        "-" +
-        generateRandomString(5);
       await user.save();
     }
     res.status(200).json({ message: "User synced", user });
@@ -526,6 +522,7 @@ app.get("/clerk-sync", auth, async (req, res) => {
   }
 });
 
-app.listen(3001, () => {
-  console.log("Server is running on port 3001");
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Server is running on port ${PORT}`);
 });
