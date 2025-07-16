@@ -2,8 +2,6 @@ import express from "express";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import User from "./models/user.model.js";
-import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
 import { auth } from "./middleware.js";
 import Question from "./models/questions.model.js";
 import Answers from "./models/answers.model.js";
@@ -12,7 +10,7 @@ import Notification from "./models/notification.model.js";
 import cors from "cors";
 import { v2 as cloudinary } from "cloudinary";
 import multer from "multer";
-import fs from "fs";
+import { clerkClient, clerkMiddleware, getAuth } from "@clerk/express";
 
 dotenv.config();
 
@@ -32,6 +30,11 @@ connectDB();
 
 app.use(express.json());
 app.use(cors());
+app.use((req, res, next) => {
+  console.log("Incoming request:", req.method, req.path);
+  next();
+});
+app.use(clerkMiddleware());
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -39,7 +42,7 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-const upload = multer({ dest: "./uploads/" });
+const upload = multer({ dest: "uploads/" });
 
 // Helper function to extract mentions from text
 const extractMentions = (text) => {
@@ -91,23 +94,24 @@ const createMentionNotifications = async (
   }
 };
 
-app.post("/upload", upload.single("media"), async (req, res) => {
+app.post("/upload", upload.single("photo"), async (req, res) => {
   try {
+    if (!req.file) return res.status(400).json({ message: "No file uploaded" });
     const filePath = req.file.path;
-    const resourceType = req.file.mimetype.startsWith("video")
-      ? "video"
-      : "image";
-
+    // Always use 'image' as resource_type
     const result = await cloudinary.uploader.upload(filePath, {
-      resource_type: resourceType,
+      resource_type: "image",
       folder: "uploads",
     });
-
-    fs.unlinkSync(filePath); // delete local temp file
     res.json({ url: result.secure_url });
   } catch (err) {
-    res.status(500).json({ error: "Upload failed", details: err.message });
+    console.error("Upload error:", err);
+    res.status(500).json({ message: "Upload failed", error: err.message });
   }
+});
+
+app.get("/", (req, res) => {
+  res.send("Hello World!");
 });
 
 app.get("/me", auth, async (req, res) => {
@@ -155,11 +159,22 @@ app.get("/questions", async (req, res) => {
     const questions = await Question.find()
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
-      .limit(limit);
+      .limit(limit)
+      .populate({
+        path: "user",
+        select: "username photo email",
+      })
+      .populate({
+        path: "tags",
+        select: "name",
+      });
+
+    const total = await Question.countDocuments();
 
     res.status(200).json({
       message: "Questions fetched successfully",
       questions,
+      total,
     });
   } catch (error) {
     console.error("Error fetching questions:", error);
@@ -170,13 +185,19 @@ app.get("/questions", async (req, res) => {
 app.get("/answers/:qid", async (req, res) => {
   try {
     const { qid } = req.params;
-    const answers = await Answers.find({ question: qid }).sort({
-      createdAt: -1,
-    });
+    const question = await Question.findById(qid)
+      .populate("user", "username photo email")
+      .populate("tags", "name");
+    const answers = await Answers.find({ question: qid })
+      .sort({
+        createdAt: -1,
+      })
+      .populate("user", "username photo email");
 
     res.status(200).json({
       message: "Answers fetched successfully",
       answers,
+      question,
     });
   } catch (error) {
     console.error("Error fetching answers:", error);
@@ -220,8 +241,9 @@ app.get("/questions/:search", async (req, res) => {
       .populate("tags", "name")
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
-      .limit(parseInt(limit));
-
+      .limit(parseInt(limit))
+      .populate("user", "username photo email")
+      .populate("tags", "name");
     res.status(200).json({
       message: "Search results fetched successfully",
       questions,
@@ -236,7 +258,16 @@ app.get("/questions/:search", async (req, res) => {
 app.post("/question", auth, async (req, res) => {
   try {
     const { title, description, tags, photo } = req.body;
-    const { userId } = req;
+    // Use Clerk userId from middleware
+    const { userId } = getAuth(req);
+    const user = await clerkClient.users.getUser(userId);
+    const email = user.emailAddresses[0].emailAddress;
+
+    const userExists = await User.findOne({ email });
+
+    if (!userExists) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
     // Validate required fields
     if (!title || !description) {
@@ -270,7 +301,7 @@ app.post("/question", auth, async (req, res) => {
 
     // Create new question
     const newQuestion = new Question({
-      user: userId,
+      user: userExists._id,
       title,
       description,
       tags: processedTags,
@@ -282,7 +313,7 @@ app.post("/question", auth, async (req, res) => {
     // Create notifications for mentions
     await createMentionNotifications(
       newQuestion.description,
-      userId,
+      userExists._id,
       newQuestion._id
     );
 
@@ -308,7 +339,13 @@ app.post("/question", auth, async (req, res) => {
 
 app.post("/answer/:qid", auth, async (req, res) => {
   try {
-    const { userId } = req;
+    const { userId } = getAuth(req);
+    const user = await clerkClient.users.getUser(userId);
+    const email = user.emailAddresses[0].emailAddress;
+    const userExists = await User.findOne({ email });
+    if (!userExists) {
+      return res.status(404).json({ message: "User not found" });
+    }
     const { qid } = req.params;
     const { answer, photo } = req.body;
 
@@ -329,7 +366,7 @@ app.post("/answer/:qid", auth, async (req, res) => {
 
     // Create new answer
     const newAnswer = new Answers({
-      user: userId,
+      user: userExists._id,
       question: qid,
       answer,
       photo: photo || null,
@@ -348,7 +385,7 @@ app.post("/answer/:qid", auth, async (req, res) => {
         user: question.user,
         type: "answer",
         content: `Someone answered your question: "${question.title}"`,
-        sender: userId,
+        sender: userExists._id,
         question: qid,
         answer: newAnswer._id,
       });
@@ -358,7 +395,7 @@ app.post("/answer/:qid", auth, async (req, res) => {
     // Create notifications for mentions in the answer
     await createMentionNotifications(
       newAnswer.answer,
-      userId,
+      userExists._id,
       qid,
       newAnswer._id
     );
@@ -366,7 +403,7 @@ app.post("/answer/:qid", auth, async (req, res) => {
     res.status(201).json({
       message: "Answer created successfully",
       answer: {
-        id: newAnswer._id,
+        _id: newAnswer._id,
         answer: newAnswer.answer,
         photo: newAnswer.photo,
         upvotes: newAnswer.upvotes,
@@ -381,12 +418,8 @@ app.post("/answer/:qid", auth, async (req, res) => {
   }
 });
 
-app.post("/vote/:qid", auth, async (req, res) => {
+app.post("/vote/ques/:qid", auth, async (req, res) => {
   try {
-    const { userId } = req;
-    if (!userId) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
     const { qid } = req.params;
     const { vote } = req.body;
 
@@ -419,9 +452,8 @@ app.post("/vote/:qid", auth, async (req, res) => {
   }
 });
 
-app.post("/vote/:aid", auth, async (req, res) => {
+app.post("/vote/ans/:aid", auth, async (req, res) => {
   try {
-    const { userId } = req;
     const { aid } = req.params;
     const { vote } = req.body;
 
@@ -454,96 +486,46 @@ app.post("/vote/:aid", auth, async (req, res) => {
   }
 });
 
-app.post("/auth/signup", async (req, res) => {
+const utils = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+const generateRandomString = (length) => {
+  let result = "";
+  for (let i = length; i > 0; --i)
+    result += utils[Math.floor(Math.random() * utils.length)];
+  return result;
+};
+app.get("/clerk-sync", auth, async (req, res) => {
   try {
-    const { username, password, email } = req.body;
-
-    if (!username || !password || !email) {
-      return res.status(400).json({ message: "Please provide all fields" });
-    }
-
-    // Check if user already exists
-    const existingUser = await User.findOne({
-      $or: [{ username }, { email }],
-    });
-
-    if (existingUser) {
-      return res.status(400).json({
-        message: "Username or email already exists",
-      });
-    }
-
-    // Hash the password
-    const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
-
-    // Create new user
-    const newUser = new User({
-      username,
-      email,
-      password: hashedPassword,
-    });
-
-    await newUser.save();
-
-    res.status(201).json({
-      message: "User created successfully",
-      user: {
-        id: newUser._id,
-        username: newUser.username,
-        email: newUser.email,
-      },
-    });
-  } catch (error) {
-    console.error("Signup error:", error);
-    res.status(500).json({ message: "Internal server error" });
-  }
-});
-
-app.post("/auth/login", async (req, res) => {
-  try {
-    const { username, password } = req.body;
-
-    if (!username || !password) {
-      return res
-        .status(400)
-        .json({ message: "Please provide username and password" });
-    }
-
-    // Find user by username
-    const user = await User.findOne({ username });
-
+    console.log("hello");
+    const { userId } = getAuth(req);
+    const clerkUser = await clerkClient.users.getUser(userId);
+    const { emailAddresses, fullName, imageUrl } = clerkUser;
+    // Upsert user in DB
+    const email = emailAddresses[0].emailAddress;
+    let user = await User.findOne({ email });
     if (!user) {
-      return res.status(401).json({ message: "Invalid credentials" });
+      user = new User({
+        username:
+          fullName.split(" ").join("").toLowerCase() + generateRandomString(5),
+        email,
+        photo: imageUrl,
+        password: "", // Not needed for Clerk users
+      });
+      await user.save();
+    } else {
+      user.photo = imageUrl;
+      user.username =
+        fullName.split(" ").join("").toLowerCase() +
+        "-" +
+        generateRandomString(5);
+      await user.save();
     }
-
-    // Compare password
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-
-    if (!isPasswordValid) {
-      return res.status(401).json({ message: "Invalid credentials" });
-    }
-
-    // Create JWT token
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "24h",
-    });
-
-    res.status(200).json({
-      message: "Login successful",
-      token,
-      user: {
-        id: user._id,
-        username: user.username,
-        email: user.email,
-      },
-    });
+    res.status(200).json({ message: "User synced", user });
   } catch (error) {
-    console.error("Login error:", error);
+    console.error("Clerk sync error:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 });
 
-app.listen(3000, () => {
-  console.log("Server is running on port 3000");
+app.listen(3001, () => {
+  console.log("Server is running on port 3001");
 });
