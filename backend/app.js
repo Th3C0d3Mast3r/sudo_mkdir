@@ -513,10 +513,6 @@ app.get("/clerk-sync", auth, async (req, res) => {
       await user.save();
     } else {
       user.photo = imageUrl;
-      user.username =
-        fullName.split(" ").join("").toLowerCase() +
-        "-" +
-        generateRandomString(5);
       await user.save();
     }
     res.status(200).json({ message: "User synced", user });
