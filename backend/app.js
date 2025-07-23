@@ -73,12 +73,10 @@ const createMentionNotifications = async (
         mentionedUser &&
         mentionedUser._id.toString() !== senderId.toString()
       ) {
+        const type = questionId ? "mention in question" : "mention in answer";
         const notification = new Notification({
           user: mentionedUser._id,
-          type: "mention",
-          content: `You were mentioned in a ${
-            questionId ? "question" : "answer"
-          }`,
+          type,
           sender: senderId,
           question: questionId,
           answer: answerId,
@@ -137,18 +135,45 @@ app.get("/me", auth, async (req, res) => {
   }
 });
 
-app.get("notifications", auth, async (req, res) => {
+app.get("/notifications", auth, async (req, res) => {
   try {
-    const { userId } = req;
-    const notifications = await Notification.find({ user: userId }).sort({
-      createdAt: -1,
-    });
+    const { userId } = getAuth(req);
+    const user = await clerkClient.users.getUser(userId);
+    const email = user.emailAddresses[0].emailAddress;
+    const userExists = await User.findOne({ email });
+    if (!userExists) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    const notifications = await Notification.find({
+      user: userExists._id,
+    })
+      .sort({
+        createdAt: -1,
+      })
+      .populate("sender", "username photo email")
+      .populate("question", "title description tags")
+      .populate("answer", "answer");
     res.status(200).json({
       message: "Notifications fetched successfully",
       notifications,
     });
   } catch (error) {
     console.error("Error fetching notifications:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+app.post("/notifications/read", auth, async (req, res) => {
+  try {
+    const { notificationId } = req.body;
+    const notification = await Notification.findById(notificationId);
+    if (!notification) {
+      return res.status(404).json({ message: "Notification not found" });
+    }
+    await notification.updateOne({ isRead: true });
+    res.status(200).json({ message: "Notification marked as read" });
+  } catch (error) {
+    console.error("Error marking notification as read:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 });
@@ -384,7 +409,6 @@ app.post("/answer/:qid", auth, async (req, res) => {
       const questionOwnerNotification = new Notification({
         user: question.user,
         type: "answer",
-        content: `Someone answered your question: "${question.title}"`,
         sender: userExists._id,
         question: qid,
         answer: newAnswer._id,

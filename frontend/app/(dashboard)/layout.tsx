@@ -1,5 +1,6 @@
 import Logo from "@/components/Logo";
 import { NavbarDemo } from "@/components/NavBarDemo";
+import Notification from "@/components/Notification";
 import { ModeToggle } from "@/components/ThemeModeToggle";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -16,6 +17,9 @@ const layout = ({ children }: { children: React.ReactNode }) => {
           </div>
           <NavbarDemo />
           <div className="gap-5 flex items-center pr-5">
+            <SignedIn>
+              <Notification />
+            </SignedIn>
             <ModeToggle />
             <SignedIn>
               <UserButton />

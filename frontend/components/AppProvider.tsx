@@ -1,10 +1,11 @@
 "use client";
 
 import { ClerkProvider, useUser, useAuth } from "@clerk/nextjs";
-import { ThemeProvider } from "next-themes";
+import { ThemeProvider, useTheme } from "next-themes";
 import { useEffect } from "react";
 import axios from "axios";
 import { BACKEND_URL } from "@/config";
+import { dark } from "@clerk/themes";
 
 function ClerkSync() {
   const { isSignedIn } = useUser();
@@ -36,7 +37,11 @@ function ClerkSync() {
 export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem={true}>
-      <ClerkProvider>
+      <ClerkProvider
+        appearance={{
+          baseTheme: dark,
+        }}
+      >
         <ClerkSync />
         {children}
       </ClerkProvider>
