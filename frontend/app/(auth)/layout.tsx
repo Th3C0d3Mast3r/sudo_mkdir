@@ -3,3 +3,5 @@ const layout = ({ children }: { children: React.ReactNode }) => {
     <div className="flex h-screen justify-center items-center">{children}</div>
   );
 };
+
+export default layout;
