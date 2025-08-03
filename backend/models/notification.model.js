@@ -8,11 +8,12 @@ const notificationSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ["mention", "answer", "accepted_answer"],
-    required: true,
-  },
-  content: {
-    type: String,
+    enum: [
+      "mention in question",
+      "mention in answer",
+      "answer",
+      "accepted_answer",
+    ],
     required: true,
   },
   sender: {

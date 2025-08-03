@@ -3,6 +3,8 @@ import { Question } from "./QuestionCard";
 import { CircleQuestionMarkIcon } from "lucide-react";
 import Qpage from "./Qpage";
 import { BACKEND_URL } from "@/config";
+import { Button } from "./ui/button";
+import Link from "next/link";
 
 const AllQuestions = async () => {
   //await waitfFor(5000);
@@ -15,13 +17,17 @@ const AllQuestions = async () => {
           <div className="rounded-full bg-accent w-20 h-20 flex items-center justify-center">
             <CircleQuestionMarkIcon size={40} className="stroke-primary" />
           </div>
-          <div className="flex flex-col gap-1 text-center">
+          <div className="flex flex-col gap-2 text-center">
             <p className="font-bold">No questions found</p>
             <p className="text-sm text-muted-foreground">
               You can ask a question by clicking the button below
             </p>
           </div>
-          {/* <CreateWorkflowDialog triggerText="Create your first workflow" /> */}
+          <Link href="/questions/ask">
+            <Button variant="default" size="lg" className="mt-4">
+              Ask New Question
+            </Button>
+          </Link>
         </div>
       );
     }
